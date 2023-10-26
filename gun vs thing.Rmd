@@ -1,0 +1,275 @@
+---
+title: "Simulating gun vs thing"
+author: "Solveig Lindberg"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+alright time to simulate gun vs warhammer things (default "marine with 5++")
+N is amount of sims, default 40k (this usually means you get things right within a percentage point or so, no formal guarantees are given)
+Insert Stats:
+```{r}
+N <- 40000
+FlatA <- 4
+RandomAttacks = FALSE
+VariableA <- c(2,6) #("xdy", eg: Flamer would be (1,6) for 1d6.)
+
+#remaining: code sustained hits
+SustainedHits= FALSE
+SustainedHitsValue = 0
+LethalHits = FALSE
+DevastatingWounds = FALSE
+Torrent = FALSE
+#weapon stats
+BS <- 2
+S <- 18
+Ap <- -4+1 #Add 1 if cover applies
+FlatD <- 6
+RandomDamage <- FALSE
+VariableD <- c(1,6) #("xdy", eg: Brightlance would be (1,6) for 1d6.)
+
+WoundModifier <- 1 #(0, 1 or -1)
+
+#Target defensive characteristics
+ModelWounds <- c(18)
+Toughness <- 12
+SV <- 2
+Invuln <- 4 #set number to the book value - if unit has no Invulnerable Save, set it larger than six.
+FNP <- 20 #set number to the book value - if unit has no FNP, set it larger than six.
+
+#Toughness calcs:
+if(S<Toughness){ToughtoBeat <- 5}
+if(S==Toughness){ToughtoBeat <- 4}
+if(S>Toughness){ToughtoBeat <- 3}
+if((S/2)>=Toughness){ToughtoBeat <- 2}
+if((S*2)<=Toughness){ToughtoBeat <- 6}
+
+
+#maybe eventually deal with cover, but like, later. very low down on the priority list.
+#normal rerolls, no weird
+reRollAllHits = FALSE
+reRoll1Hits = FALSE
+reRollAHit = TRUE
+reRollAllWounds = FALSE
+reRoll1Wounds = FALSE
+reRollAWound =TRUE
+#implement six-fishing later, but don't expect to end up in such worlds often
+AdditiveDamageModifier= 0
+MultiplicativeDamageModifier=1
+```
+
+Count the fucking modifier to hit your own godsdamned self btw, I Ain't Doing It.
+Also Invulns are sacred shut the fuck up
+
+Attack Calcs:
+```{r}
+if(RandomAttacks==TRUE){
+  TotalA <- numeric(N*(FlatA+(VariableA[1]*VariableA[2])))
+  dim(TotalA)<-cbind(c(N,FlatA+(VariableA[1]*VariableA[2])))
+  for (i in 1:N){
+    AttackRoll <- sum(sample.int(VariableA[2],VariableA[1], replace = TRUE))
+    for(j in 1:(FlatA+(VariableA[1]*VariableA[2]))){
+      if((FlatA+AttackRoll)>=j){
+        TotalA[i,j] <- 1
+      }else{
+        TotalA[i,j] <- 0
+      }
+    }
+  }
+}
+```
+
+
+Hit calcs:
+```{r}
+if(RandomAttacks==FALSE){
+  Hitrolls <- sample.int(6, FlatA*N , replace=TRUE)
+  dim(Hitrolls)<-cbind(c(N,FlatA))
+}else{
+  Hitrolls <- numeric(N*(FlatA+(VariableA[1]*VariableA[2])))
+  dim(Hitrolls) <- cbind(c(N,FlatA+(VariableA[1]*VariableA[2])))
+  for (i in 1:N){
+    for(j in 1:(FlatA+(VariableA[1]*VariableA[2]))){
+      if(TotalA[i,j]==1){
+        Hitrolls[i,j] <- sample.int(6,1,replace=TRUE)
+      }
+    }
+  }
+}  
+NormalHits <- Hitrolls>= BS
+if(Torrent==TRUE){
+  NormalHits <- Hitrolls>0
+}
+CriticalHits <- Hitrolls==6
+Failedhits <- 1-NormalHits
+NNormalHits <- as.numeric(NormalHits)
+
+if(RandomAttacks==FALSE){
+  dim(NNormalHits) <- cbind(c(N,FlatA))
+}else{
+  dim(NNormalHits) <- cbind(c(N,(FlatA+(VariableA[1]*VariableA[2]))))
+}
+
+#add re-rolls here, but not now
+
+#TotalHits <- rowSums(NormalHits+CriticalHits*SustainedHitsValue)
+```
+
+
+
+Wound calcs:
+```{r}
+if(RandomAttacks==FALSE){
+  Woundrolls <- numeric(FlatA*N) 
+  dim(Woundrolls)<-cbind(c(N,FlatA))
+  for (i in 1:N){
+    for(j in 1:FlatA){
+      if(NNormalHits[i,j]==1){
+        Woundrolls[i, j] <-sample(c(1:6), 1, replace=TRUE)
+      } else {
+       Woundrolls[i, j] <- 0
+      }
+    }
+  }
+  NormalWounds <- ((Woundrolls>=ToughtoBeat-(WoundModifier)))
+
+  if(LethalHits==TRUE){
+    NormalWounds = 0>(NNormalWounds+CriticalHits)
+    NNormalWounds <- as.numeric(NormalWounds)
+    dim(NNormalWounds)<-cbind(c(N,FlatA))
+  }else{
+    NNormalWounds <- as.numeric(NormalWounds)
+    dim(NNormalWounds)<-cbind(c(N,FlatA))
+  }
+}else{
+  Woundrolls <- numeric(N*(FlatA+(VariableA[1]*VariableA[2])))
+  dim(Woundrolls)<-cbind(c(N,FlatA+(VariableA[1]*VariableA[2])))
+  for (i in 1:N){
+    for(j in 1:(FlatA+(VariableA[1]*VariableA[2]))){
+      if(NNormalHits[i,j]==1){
+        Woundrolls[i, j] <-sample(c(1:6), 1, replace=TRUE)
+      } else {
+       Woundrolls[i, j] <- 0
+      }
+    }
+  }
+  NormalWounds <- (Woundrolls>=(ToughtoBeat-(WoundModifier)))
+
+  if(LethalHits==TRUE){
+    NormalWounds = 0>(NNormalWounds+CriticalHits)
+    NNormalWounds <- as.numeric(NormalWounds)
+    dim(NNormalWounds)<-cbind(c(N,(FlatA+(VariableA[1]*VariableA[2]))))
+  }else{
+    NNormalWounds <- as.numeric(NormalWounds)
+    dim(NNormalWounds)<-cbind(c(N,(FlatA+(VariableA[1]*VariableA[2]))))
+  }
+}
+
+
+ CriticalWounds <- (Woundrolls==6)
+  if(DevastatingWounds==TRUE&&LethalHits==TRUE){
+    CriticalWounds=CriticalWounds-CriticalHits
+  }
+  #devastating wounds?
+  if(DevastatingWounds==TRUE){
+    NNormalWounds <- NNormalWounds-CriticalWounds
+  }
+```
+
+```{r}
+dim(NNormalWounds)
+```
+
+
+Save calcs:
+```{r}
+Saverolls <- numeric(dim(NNormalWounds)[2]*N) #Use ((SustainedHitsValue+1)*FlatA*N) everywhere when implementing sustained hits
+dim(Saverolls)<-cbind(c(N,dim(NNormalWounds)[2]))
+
+for (i in 1:N){
+  for(j in 1:dim(NNormalWounds)[2]){
+    if(NNormalWounds[i,j]==1){
+    Saverolls[i, j] <-sample.int(6, 1, replace=TRUE)
+    } else {
+    Saverolls[i, j] <- 20
+    }
+  }
+}
+FailedSaves <- Saverolls<=min((SV-Ap),Invuln)
+NFailedSaves <- as.numeric(FailedSaves)
+dim(NFailedSaves) <- cbind(c(N,dim(NNormalWounds)[2]))
+```
+Resulting Total Damage Calcs:
+```{r}
+DamageApplications <- rowSums(NFailedSaves)
+TotalDamage <- numeric(N)
+if (RandomDamage==FALSE){
+  TotalDamage <- FlatD*DamageApplications
+} else {
+  for (i in 1:N){
+    for (j in 1:DamageApplications[i]){
+      Drolls <- sample.int(VariableD[2],VariableD[1],replace=TRUE)+FlatD
+      TotalDamage[i] <- +Drolls
+    }
+  }
+}
+```
+Resulting Model destruction Calcs:
+```{r}
+SimDamageApplications <- DamageApplications
+
+SimModels <- numeric(N*length(ModelWounds))
+SimModels <- rep(ModelWounds, N)
+dim(SimModels)<-(cbind(c(N,length(ModelWounds))))
+for(i in 1:N){
+  jstar <- 1
+  while ((SimDamageApplications[i]>0)&&(SimModels[i,length(ModelWounds)]>0)) {
+    if(SimModels[i,jstar]<=0){
+      jstar = jstar+1
+    }
+    SimModels[i,jstar] <- SimModels[i,jstar] -max((MultiplicativeDamageModifier*(FlatD+(as.numeric(RandomDamage)*sum(sample.int(VariableD[2],VariableD[1],replace=TRUE))))+AdditiveDamageModifier),1)
+    SimDamageApplications[i] = SimDamageApplications[i]-1
+  }
+}
+if(DevastatingWounds==TRUE){
+  TotalMortals <- 0
+  DevWoundsApplications <- rowSums(CriticalWounds)
+  RemainingDevWoundsApplications <- DevWoundsApplications
+  for(i in 1:N){
+    while(RemainingDevWoundsApplications[i]>0){
+      TotalMortals <- TotalMortals+max((MultiplicativeDamageModifier*(FlatD+(as.numeric(RandomDamage)*sum(sample.int(VariableD[2],VariableD[1],replace=TRUE))))+AdditiveDamageModifier),1)
+      RemainingDevWoundsApplications[i] <- RemainingDevWoundsApplications[i]-1
+    }
+    jstar <- 1
+    while((TotalMortals>0)&&(SimModels[i,length(ModelWounds)]>0)){
+      while(SimModels[i,jstar]<=0){
+        jstar = jstar+1
+      }
+      SimModels[i, jstar] = SimModels[i, jstar]-1
+      TotalMortals = TotalMortals-1
+    }
+  }
+}
+
+SurvivingModels <- rowSums(SimModels>0)
+```
+
+
+Data Analysis and graphs and shit
+```{r}
+DestroyedModels <- length(ModelWounds)-SurvivingModels
+
+hist(TotalDamage)
+plot.ecdf(SurvivingModels) #probability of this many models or fewer remaining
+plot.ecdf(DestroyedModels) #probability of this many models or fewer destroyed
+
+```
+
+```{r}
+TableTotalDamage <- table(TotalDamage)
+TableTotalDamage/N
+1-cumsum(TableTotalDamage/N)+TableTotalDamage/N
+TableDestroyedModels <- table(DestroyedModels)
+TableDestroyedModels/N
+1-cumsum(TableDestroyedModels/N)+TableDestroyedModels/N #probability estimate of X models destroy or more
+```

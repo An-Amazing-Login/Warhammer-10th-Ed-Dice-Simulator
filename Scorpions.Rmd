@@ -1,0 +1,199 @@
+---
+title: "Rolling."
+author: "Solveig Lindberg"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+Computing only expected values in this doc
+
+Equations!! Against Light Marines, though with 5++ invulns - representing the defensive tricks one might run into.
+```{r}
+#biting blade
+bbwoundsdealt <- 1
+bbdmg <- 2*bbwoundsdealt
+bbM <- bbdmg
+bbs <- (3/6)*bbdmg
+#no rerolls
+bbWnoRe <- (1/6)*bbM +(3/6)*bbs
+bbHnoRe <-(4/6)*bbWnoRe+(1/6)*2*bbWnoRe
+#rerolls
+bbWRe <- (1/6)*bbM+(3/6)*bbs+(2/6)*bbWnoRe
+bbHRe <- (4/6)*bbWRe+(1/6)*2*bbWRe
+#Fishing for sixes:
+bbWsixRe <-(1/6)*bbM+(5/6)*bbWnoRe
+bbHsixRe <-(4/6)*bbWsixRe+(1/6)*2*bbWsixRe
+
+#scorpion chainsword
+scdmg <- 1
+scM <- scdmg
+scs <- (2/6)*scdmg
+#no rerolls
+scWnoRe <- (1/6)*bbM+(2/6)*scs
+scHnoRe <- (4/6)*scWnoRe+(1/6)*2*scWnoRe
+#rerolls
+scWRe <- (1/6)*scM+(2/6)*scs+(3/6)*scWnoRe
+scHRe <- (4/6)*scWRe+(1/6)*2*scWRe
+#Fishing for sixes:
+scWsixRe <-(1/6)*scM+(5/6)*scWnoRe
+scHsixRe <-(4/6)*scWsixRe+(1/6)*2*scWsixRe
+
+#Ahra's Bane
+ABwoundsdealt <- 1
+ABdmg <- 2*ABwoundsdealt
+ABM <- ABdmg
+ArBs <- (4/6)*ABdmg
+#no rerolls
+ABWnoRe <- (1/6)*ABM+(4/6)*ArBs
+ABHnoRe <- (2/6)*ABWnoRe+(3/6)*2*ABWnoRe
+#rerolls
+ABWRe <- (1/6)*ABM+(4/6)*ArBs+(1/6)*ABWnoRe
+ABHRe <- (2/6)*ABWRe+(3/6)*2*ABWRe
+#fishing
+ABWsixRe <- (1/6)*ABM+(5/6)*ABWnoRe
+ABHsixRe <- (2/6)*ABWsixRe+(3/6)*2*ABWsixRe
+#Isirmathil
+Isirwoundsdealt <- 1
+Isirdmg <- 1*Isirwoundsdealt
+IsirM <- Isirdmg
+Isirs <- (3/6)*Isirdmg
+#no rerolls
+IsirWnoRe <- (1/6)*IsirM+(3/6)*Isirs
+IsirHnoRe <- (2/6)*IsirWnoRe+(3/6)*2*IsirWnoRe
+#rerolls
+IsirWRe <- (1/6)*IsirM+(3/6)*Isirs+(2/6)*IsirWnoRe
+IsirHRe <- (2/6)*IsirWRe+(3/6)*2*IsirWRe
+#fishing
+IsirWsixRe <- (1/6)*IsirM+(5/6)*IsirWnoRe
+IsirHsixRe <- (2/6)*IsirWsixRe+(3/6)*2*IsirWsixRe
+```
+
+Questions asked:
+When rerolling, how should you reroll?
+```{r}
+5*bbHRe
+5*bbHsixRe
+5*scHRe
+5*scHsixRe
+```
+10 man unit without re-rolls or 5 man unit with re-rolls? (killing marines and lighter)
+```{r}
+5*bbHnoRe+(9*4)*scHnoRe
+5*bbHRe+(4*4)*scHsixRe
+```
+Better to have big unit, actually
+
+How to reroll Karandras:
+```{r}
+5*ABHRe
+5*ABHsixRe
+5*ABHnoRe
+8*IsirHRe
+8*IsirHsixRe
+8*IsirHnoRe
+```
+With Karandras, do re-rolls good?
+```{r}
+5*bbHnoRe+(9*4)*scHnoRe+5*ABHnoRe
+5*bbHRe+(4*4)*scHsixRe+5*ABHRe
+20.16667-14.14815
+28.31481-23.65432
+```
+still better with more, but gap slightly closer.
+The smaller unit kills 10-blocks of marines in expectation, would have to do sims to know better. Probably good enough, especially with the utility of extra Falcon/you like it. God this man slaps hard though
+
+against terminators:
+```{r}
+#biting blade
+bbwoundsdealt <- 1
+bbdmg <- 2*bbwoundsdealt
+bbM <- bbdmg
+bbs <- (2/6)*bbdmg
+#no rerolls
+bbWnoRe <- (1/6)*bbM +(2/6)*bbs
+bbHnoRe <-(4/6)*bbWnoRe+(1/6)*2*bbWnoRe
+#rerolls
+bbWRe <- (1/6)*bbM+(2/6)*bbs+(3/6)*bbWnoRe
+bbHRe <- (4/6)*bbWRe+(1/6)*2*bbWRe
+#Fishing for sixes:
+bbWsixRe <-(1/6)*bbM+(5/6)*bbWnoRe
+bbHsixRe <-(4/6)*bbWsixRe+(1/6)*2*bbWsixRe
+
+#scorpion chainsword
+scdmg <- 1
+scM <- scdmg
+scs <- (1/6)*scdmg
+#no rerolls
+scWnoRe <- (1/6)*bbM+(1/6)*scs
+scHnoRe <- (4/6)*scWnoRe+(1/6)*2*scWnoRe
+#rerolls
+scWRe <- (1/6)*scM+(1/6)*scs+(4/6)*scWnoRe
+scHRe <- (4/6)*scWRe+(1/6)*2*scWRe
+#Fishing for sixes:
+scWsixRe <-(1/6)*scM+(5/6)*scWnoRe
+scHsixRe <-(4/6)*scWsixRe+(1/6)*2*scWsixRe
+
+#Ahra's Bane
+ABwoundsdealt <- 1
+ABdmg <- 2*ABwoundsdealt
+ABM <- ABdmg
+ArBs <- (3/6)*ABdmg
+#no rerolls
+ABWnoRe <- (1/6)*ABM+(3/6)*ArBs
+ABHnoRe <- (2/6)*ABWnoRe+(3/6)*2*ABWnoRe
+#rerolls
+ABWRe <- (1/6)*ABM+(3/6)*ArBs+(2/6)*ABWnoRe
+ABHRe <- (2/6)*ABWRe+(3/6)*2*ABWRe
+#fishing
+ABWsixRe <- (1/6)*ABM+(5/6)*ABWnoRe
+ABHsixRe <- (2/6)*ABWsixRe+(3/6)*2*ABWsixRe
+#Isirmathil
+Isirwoundsdealt <- 1
+Isirdmg <- 1*Isirwoundsdealt
+IsirM <- Isirdmg
+Isirs <- (2/6)*Isirdmg
+#no rerolls
+IsirWnoRe <- (1/6)*IsirM+(3/6)*Isirs
+IsirHnoRe <- (2/6)*IsirWnoRe+(3/6)*2*IsirWnoRe
+#rerolls
+IsirWRe <- (1/6)*IsirM+(3/6)*Isirs+(2/6)*IsirWnoRe
+IsirHRe <- (2/6)*IsirWRe+(3/6)*2*IsirWRe
+#fishing
+IsirWsixRe <- (1/6)*IsirM+(5/6)*IsirWnoRe
+IsirHsixRe <- (2/6)*IsirWsixRe+(3/6)*2*IsirWsixRe
+```
+
+Terminators and other heavy infantry (sorta)
+```{r}
+5*bbHRe
+5*bbHsixRe
+5*scHRe
+5*scHsixRe
+```
+10 man unit without re-rolls or 5 man unit with re-rolls? (killing marines and lighter)
+```{r}
+5*bbHnoRe+(9*4)*scHnoRe
+5*bbHRe+(4*4)*scHsixRe
+(4*4)*scHsixRe
+```
+
+How to reroll Karandras:
+```{r}
+5*ABHRe
+5*ABHsixRe
+5*ABHnoRe
+8*IsirHRe
+8*IsirHsixRe
+8*IsirHnoRe
+```
+
+```{r}
+5*bbHnoRe+(9*4)*scHnoRe+5*ABHnoRe
+5*bbHRe+(4*4)*scHsixRe+5*ABHRe
+15.77778-11.64815
+21.33333-19.05556
+```
+
+Against tougher targets (you don't wanna charge those unless you can brutalise them, you won't live to regret it. Though you do actually deal good dmg, not accounting for the issues of breakpoints in damage types. You lose out on raw dmg but it might be worth using Isirmathil just for the reliability of D1 not being reduced by Terminator models having 3 wounds. Though tbh it looks like it's always better to take the big profile against termies, unless they start at one wound possibly.) the re-rolls get much better than the raw volume (surprising!!). 
+
+You expect to kill about 6 terminators with the Striking Scorpions so they are in fact a legitimate midboard missile threat (they will not survive this but if you kill 200+ pts of termies for your investment of 175 pts of striking scorpions you're still actually efficient, especiallly if this gives you VP and can maybe save the scorpions)
